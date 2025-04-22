@@ -84,7 +84,7 @@ services:
       net23:
         ipv4_address: 172.30.23.20
     cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
-    Volumes:
+    volumes:
       - ./frr/r2:/etc/frr
     command:
       - sh
