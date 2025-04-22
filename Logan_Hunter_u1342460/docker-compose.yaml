@@ -1,0 +1,185 @@
+services:
+  ha:
+    image: alpine:latest
+    depends_on:
+      - r1
+    stdin_open: true
+    tty: true
+    privileged: true
+    container_name: ha
+    networks:
+      net1:
+        ipv4_address: 172.30.14.30
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache traceroute
+        apk add --no-cache tcpdump
+        ip route del default
+        ip route add default via 172.30.14.40
+        sleep infinity
+    cap_add: [NET_ADMIN]
+
+  hb:
+    image: alpine:latest
+    depends_on:
+      - r3
+    stdin_open: true
+    tty: true
+    privileged: true
+    container_name: hb
+    networks:
+      net2:
+        ipv4_address: 172.30.35.30
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache traceroute
+        apk add --no-cache tcpdump
+        ip route del default
+        ip route add default via 172.30.35.10
+        sleep infinity
+    cap_add: [NET_ADMIN]
+
+  r1:
+    build:
+      context: .
+      dockerfile: routerDockerfile
+    stdin_open: true
+    tty: true
+    privileged: true
+    container_name: r1
+    networks:
+      net1:
+        ipv4_address: 172.30.14.40
+      net12:
+        ipv4_address: 172.30.12.10
+      net14:
+        ipv4_address: 172.30.13.10
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    volumes:
+      - ./frr/r1:/etc/frr
+    command:
+      - sh
+      - -c
+      - |
+        /usr/lib/frr/frrinit.sh start
+        sleep 5
+        vtysh -f /etc/frr/vtysh.conf
+        sleep infinity
+
+  r2:
+    build:
+      context: .
+      dockerfile: routerDockerfile
+    stdin_open: true
+    tty: true
+    privileged: true
+    container_name: r2
+    networks:
+      net12:
+        ipv4_address: 172.30.12.20
+      net23:
+        ipv4_address: 172.30.23.20
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    Volumes:
+      - ./frr/r2:/etc/frr
+    command:
+      - sh
+      - -c
+      - |
+        /usr/lib/frr/frrinit.sh start
+        sleep 5
+        vtysh -f /etc/frr/vtysh.conf
+        sleep infinity
+
+  r3:
+    build:
+      context: .
+      dockerfile: routerDockerfile
+    stdin_open: true
+    tty: true
+    privileged: true
+    container_name: r3
+    networks:
+      net23:
+        ipv4_address: 172.30.23.30
+      net34:
+        ipv4_address: 172.30.34.30
+      net2:
+        ipv4_address: 172.30.35.10
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    volumes:
+      - ./frr/r3:/etc/frr
+    command:
+      - sh
+      - -c
+      - |
+        /usr/lib/frr/frrinit.sh start
+        sleep 5
+        vtysh -f /etc/frr/vtysh.conf
+        sleep infinity
+  r4:
+    build:
+      context: .
+      dockerfile: routerDockerfile
+    stdin_open: true
+    tty: true
+    privileged: true
+    container_name: r4
+    networks:
+      net14:
+        ipv4_address: 172.30.13.40
+      net34:
+        ipv4_address: 172.30.34.40
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    volumes:
+      - ./frr/r4:/etc/frr
+    command:
+      - sh
+      - -c
+      - |
+        /usr/lib/frr/frrinit.sh start
+        sleep 5
+        vtysh -f /etc/frr/vtysh.conf
+        sleep infinity
+
+networks:
+
+  net1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.14.0/24
+
+  net12:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.12.0/24
+
+  net14:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.13.0/24
+
+  net23:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.23.0/24
+
+  net34:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.34.0/24
+
+  net2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.35.0/24

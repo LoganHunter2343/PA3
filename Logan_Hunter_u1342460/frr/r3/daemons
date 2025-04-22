@@ -1,0 +1,3 @@
+DAEMONS:
+ospfd=yes
+zebra=yes
